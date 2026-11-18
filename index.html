@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="it"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Shop</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#000;color:#00ff41;font-family:"Courier New",monospace;min-height:100vh}
+#rain{position:fixed;inset:0;opacity:.22;z-index:0}
+#app{position:relative;z-index:1;max-width:480px;margin:auto;padding:16px 16px 40px}
+.logo{text-align:center;margin:10px 0 20px}
+.logo img{max-width:70%;max-height:200px}
+h2{margin:8px 0 14px;text-shadow:0 0 8px #00ff41}
+h3{margin:22px 0 8px;font-size:14px;letter-spacing:2px;opacity:.8}
+.btn{display:flex;justify-content:space-between;align-items:center;width:100%;margin:10px 0;padding:16px;
+background:rgba(0,35,0,.75);color:#00ff41;border:1px solid #00ff41;border-radius:10px;
+font:bold 16px "Courier New",monospace;text-transform:uppercase;box-shadow:0 0 10px #00ff4140;cursor:pointer}
+.btn:active,.sel{background:#00ff41;color:#000}
+.row{display:flex;flex-wrap:wrap;gap:8px}
+.chip{padding:10px 14px;border:1px solid #00ff41;border-radius:20px;background:rgba(0,35,0,.75);
+color:#00ff41;font:bold 14px "Courier New",monospace;cursor:pointer}
+.rev{border-left:2px solid #00ff41;padding:6px 10px;margin:8px 0;background:rgba(0,35,0,.6)}
+.rev b{display:block}
+.order{margin-top:22px;background:#00ff41;color:#000}
+</style></head><body>
+<canvas id="rain"></canvas><div id="app"></div>
+<script>
+/* ========== DA MODIFICARE ========== */
+const CONTACT_USER = "TUO_USERNAME";            // il tuo username Telegram, senza @
+const REVIEWS_URL  = "https://LINK_CANALE_RECENSIONI"; // canale recensioni Tato Talk
+const PRODUCTS = [
+  {name:"Prodotto 1", prices:[["1 pz",10],["3 pz",27],["5 pz",40]], colors:["Verde","Nero","Bianco"],
+   reviews:[["Marco","Tutto perfetto, consegna veloce!"],["Luca","Qualità top, lo riprendo."]]},
+  {name:"Prodotto 2", prices:[["1 pz",15],["2 pz",28],["5 pz",65]], colors:["Rosso","Blu"],
+   reviews:[["Anna","Consigliatissimo!"]]}
+];
+/* =================================== */
+
+const tg = window.Telegram && Telegram.WebApp;
+if (tg) { tg.ready(); tg.expand(); tg.setHeaderColor("#000000"); tg.setBackgroundColor("#000000"); }
+const app = document.getElementById("app");
+let view = "home", cur = null, tier = 0, color = null;
+
+function openTg(url){ tg && tg.openTelegramLink ? tg.openTelegramLink(url) : window.open(url, "_blank"); }
+function openExt(url){ tg && tg.openLink ? tg.openLink(url) : window.open(url, "_blank"); }
+function contact(){ openTg("https://t.me/" + CONTACT_USER); }
+function order(){
+  const p = PRODUCTS[cur], t = p.prices[tier];
+  const msg = `Ciao! Vorrei ordinare:\nProdotto: ${p.name}\nQuantità: ${t[0]}\nColore: ${color}\nPrezzo: ${t[1]}€`;
+  openTg("https://t.me/" + CONTACT_USER + "?text=" + encodeURIComponent(msg));
+}
+function go(v, i){
+  view = v;
+  if (i !== undefined) { cur = i; tier = 0; color = PRODUCTS[i].colors[0]; }
+  render();
+}
+function back(){ go(view === "product" ? "menu" : "home"); }
+
+function render(){
+  let h = "";
+  if (view === "home") {
+    h = `<div class="logo"><img src="logo.png" alt="" onerror="this.style.display='none'"></div>
+    <button class="btn" onclick="contact()">📩 Contatto</button>
+    <button class="btn" onclick="go('menu')">📋 Menu</button>
+    <button class="btn" onclick="openExt(REVIEWS_URL)">⭐ Recensioni</button>`;
+  } else if (view === "menu") {
+    h = `<h2>&gt; MENU</h2>` + PRODUCTS.map((p,i) =>
+      `<button class="btn" onclick="go('product',${i})"><span>${p.name}</span><span>DA ${Math.min(...p.prices.map(x=>x[1]))}€</span></button>`).join("");
+  } else {
+    const p = PRODUCTS[cur];
+    h = `<h2>&gt; ${p.name}</h2><h3>PREZZI</h3>` +
+      p.prices.map((x,i) => `<button class="btn ${i===tier?'sel':''}" onclick="tier=${i};render()"><span>${x[0]}</span><span>${x[1]}€</span></button>`).join("") +
+      `<h3>COLORI</h3><div class="row">` +
+      p.colors.map(c => `<button class="chip ${c===color?'sel':''}" onclick="color='${c}';render()">${c}</button>`).join("") +
+      `</div><button class="btn order" onclick="order()">🛒 Ordina</button><h3>COMMENTI</h3>` +
+      (p.reviews.map(r => `<div class="rev"><b>${r[0]}</b>${r[1]}</div>`).join("") || "Ancora nessun commento.");
+  }
+  if (view !== "home") h += `<button class="btn" style="margin-top:24px" onclick="back()">← Indietro</button>`;
+  app.innerHTML = h;
+  if (tg && tg.BackButton) view === "home" ? tg.BackButton.hide() : tg.BackButton.show();
+  window.scrollTo(0, 0);
+}
+if (tg && tg.BackButton) tg.BackButton.onClick(back);
+render();
+
+/* effetto Matrix */
+const cv = document.getElementById("rain"), cx = cv.getContext("2d"); let drops;
+function size(){ cv.width = innerWidth; cv.height = innerHeight; drops = Array(Math.floor(cv.width/16)).fill(1); }
+size(); addEventListener("resize", size);
+setInterval(() => {
+  cx.fillStyle = "rgba(0,0,0,.08)"; cx.fillRect(0,0,cv.width,cv.height);
+  cx.fillStyle = "#00ff41"; cx.font = "14px monospace";
+  drops.forEach((y,i) => {
+    cx.fillText(String.fromCharCode(0x30A0 + Math.random()*96), i*16, y*16);
+    if (y*16 > cv.height && Math.random() > .975) drops[i] = 0;
+    drops[i]++;
+  });
+}, 50);
+</script></body></html>

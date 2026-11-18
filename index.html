@@ -26,8 +26,8 @@ color:#00ff41;font:bold 14px "Courier New",monospace;cursor:pointer}
 <canvas id="rain"></canvas><div id="app"></div>
 <script>
 /* ========== DA MODIFICARE ========== */
-const CONTACT_USER = "TUO_USERNAME";            // il tuo username Telegram, senza @
-const REVIEWS_URL  = "https://LINK_CANALE_RECENSIONI"; // canale recensioni Tato Talk
+const CONTACT_USER = "CARTELL_18777";            // il tuo username Telegram, senza @
+const REVIEWS_URL  = "https://tato.im/RECENSIONICARTEL"; // canale recensioni Tato Talk
 const PRODUCTS = [
   {name:"Prodotto 1", prices:[["1 pz",10],["3 pz",27],["5 pz",40]], colors:["Verde","Nero","Bianco"],
    reviews:[["Marco","Tutto perfetto, consegna veloce!"],["Luca","Qualità top, lo riprendo."]]},
@@ -59,7 +59,7 @@ function back(){ go(view === "product" ? "menu" : "home"); }
 function render(){
   let h = "";
   if (view === "home") {
-    h = `<div class="logo"><img src="logo.png" alt="" onerror="this.style.display='none'"></div>
+    h = `<div class="logo"><img src="logo.png.jpg" alt="" onerror="this.style.display='none'"></div>
     <button class="btn" onclick="contact()">📩 Contatto</button>
     <button class="btn" onclick="go('menu')">📋 Menu</button>
     <button class="btn" onclick="openExt(REVIEWS_URL)">⭐ Recensioni</button>`;
